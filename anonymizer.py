@@ -8,8 +8,18 @@ import spacy
 import streamlit as st
 @st.cache_resource
 def cargar_modelo():
-    return spacy.load("es_core_news_lg")
-
+    try:
+        # Intento 1: Carga estándar
+        return spacy.load("es_core_news_lg")
+    except OSError:
+        try:
+            # Intento 2: Carga por nombre de paquete completo (A prueba de fallos en Windows)
+            import es_core_news_lg
+            return es_core_news_lg.load()
+        except ImportError:
+            st.error("⚠️ El modelo 'es_core_news_lg' no está instalado. Por favor, ejecuta el instalador de nuevo.")
+            return None
+        
 nlp = cargar_modelo()
 
 # Mapeo unificado (Sin archivos config extra)
