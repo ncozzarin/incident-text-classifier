@@ -4,25 +4,21 @@ import re
 from datetime import timedelta
 import spacy
 
-# Carga del modelo (Protegido por caché de Streamlit para que no sea lento)
 import streamlit as st
 @st.cache_resource
 def cargar_modelo():
     try:
-        # Intento 1: Carga estándar
         return spacy.load("es_core_news_lg")
     except OSError:
         try:
-            # Intento 2: Carga por nombre de paquete completo (A prueba de fallos en Windows)
             import es_core_news_lg
             return es_core_news_lg.load()
         except ImportError:
-            st.error("⚠️ El modelo 'es_core_news_lg' no está instalado. Por favor, ejecuta el instalador de nuevo.")
+            st.error("El modelo 'es_core_news_lg' no está instalado. ejecutar el instalador de nuevo.")
             return None
         
 nlp = cargar_modelo()
 
-# Mapeo unificado (Sin archivos config extra)
 REGLAS = {
     "hash": ["id", "caso_id", "id_investigado", "id_involucramiento", "id_persona_investigada", "sac", "numero_sumario", "dni", "cuil", "dni_involucrado"],
     "supresion": ["enlace_carpeta", "nombre_apellido", "relator", "coordinador_responsable", "detective", "asignadoA", "nombre_involucrado", "apellido_involucrado", "nombre", "apellido", "link_resolucion", "link_prorroga", "interviniente", "correo_electronico", "email"],
@@ -34,7 +30,6 @@ def anonimizar_df(df: pd.DataFrame, salt: str, dias_perturbacion: int) -> pd.Dat
     df_anon = df.copy()
     columnas = df_anon.columns
 
-    # Construir diccionario de nombres (rápido y simple)
     diccionario_nombres = {}
     cols_nombres = [c for c in columnas if c in ["nombre_apellido", "nombre", "apellido", "nombre_involucrado", "apellido_involucrado"]]
     for col in cols_nombres:
