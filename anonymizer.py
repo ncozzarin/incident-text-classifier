@@ -3,8 +3,8 @@ import hashlib
 import re
 from datetime import timedelta
 import spacy
-
 import streamlit as st
+
 @st.cache_resource
 def cargar_modelo():
     try:
@@ -14,7 +14,7 @@ def cargar_modelo():
             import es_core_news_lg
             return es_core_news_lg.load()
         except ImportError:
-            st.error("El modelo 'es_core_news_lg' no está instalado. ejecutar el instalador de nuevo.")
+            st.error("El modelo 'es_core_news_lg' no está instalado. Ejecutar el instalador de nuevo.")
             return None
         
 nlp = cargar_modelo()
@@ -29,13 +29,6 @@ REGLAS = {
 def anonimizar_df(df: pd.DataFrame, salt: str, dias_perturbacion: int) -> pd.DataFrame:
     df_anon = df.copy()
     columnas = df_anon.columns
-
-    diccionario_nombres = {}
-    cols_nombres = [c for c in columnas if c in ["nombre_apellido", "nombre", "apellido", "nombre_involucrado", "apellido_involucrado"]]
-    for col in cols_nombres:
-        for nombre in df_anon[col].dropna().unique():
-            if len(str(nombre)) > 3: diccionario_nombres[str(nombre)] = "[PERSONA_BD]"
-    diccionario_nombres = dict(sorted(diccionario_nombres.items(), key=lambda x: len(x[0]), reverse=True))
 
     # Procesar columnas
     for col in columnas:
@@ -54,11 +47,13 @@ def anonimizar_df(df: pd.DataFrame, salt: str, dias_perturbacion: int) -> pd.Dat
             def enmascarar(texto):
                 if pd.isna(texto) or not isinstance(texto, str): return texto
                 t = texto
-                for n, et in diccionario_nombres.items():
-                    t = re.sub(r'\b' + re.escape(n) + r'\b', et, t, flags=re.IGNORECASE)
+                # Detectar Emails
+                t = re.sub(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', '[EMAIL]', t)
+                # Detectar DNI: Exactamente 7 u 8 cifras limitados por \b
                 t = re.sub(r'\b\d{7,8}\b', '[DNI]', t)
-                
-                # NER Spacy
+                # Detectar cualquier otro número
+                t = re.sub(r'\d+', '[N]', t)
+                # 3. NER Spacy
                 doc = nlp(t)
                 tokens = ["[PERSONA]" if token.ent_type_ == "PER" else "[LUGAR]" if token.ent_type_ == "LOC" else token.text for token in doc]
                 return spacy.tokens.doc.Doc(nlp.vocab, words=tokens, spaces=[tok.whitespace_ for tok in doc]).text
