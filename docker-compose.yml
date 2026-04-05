@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with pgcrypto
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-security_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_in_production}
+      POSTGRES_DB: ${POSTGRES_DB:-security_incidents}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_AR.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-security_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # Redis for caching and message queuing
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-security_user}:${POSTGRES_PASSWORD:-change_this_in_production}@db:5432/${POSTGRES_DB:-security_incidents}
+      REDIS_URL: redis://redis:6379
+      VAULT_MASTER_KEY: ${VAULT_MASTER_KEY}
+      AUDIT_LOG_SIGNING_KEY: ${AUDIT_LOG_SIGNING_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - ./backend:/app
+      - ./backend/entorno_seguro:/app/entorno_seguro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - backend
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+    command: npm run dev
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge
