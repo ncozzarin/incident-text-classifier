@@ -1,2 +1,39 @@
-/entorno_seguro
-anonymizer.zip
+# Byte-compiled files
+__pycache__/
+*.pyc
+
+# Virtual environments
+entorno_api/
+entorno_seguro/
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes (local)
+postgres_data/
+redis_data/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+logs/
+
+# Uploads/temp/
+
+# Temporary files
+*.tmp
+*.zip

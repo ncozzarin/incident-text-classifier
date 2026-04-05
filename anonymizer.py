@@ -14,7 +14,7 @@ def cargar_modelo():
             import es_core_news_lg
             return es_core_news_lg.load()
         except ImportError:
-            st.error("El modelo 'es_core_news_lg' no está instalado. Ejecutar el instalador de nuevo.")
+            st.error("el modelo 'es_core_news_lg' no está instalado. ejecutar el instalador de nuevo.")
             return None
         
 nlp = cargar_modelo()
@@ -26,11 +26,31 @@ REGLAS = {
     "texto": ["resena", "observaciones_investigacion", "incidencias", "comentarios", "observaciones", "motivo", "fijacionHecho", "detalleProcedimiento", "observaciones_req_sanc"]
 }
 
+# diccionario estatico de nombres argentinos
+NOMBRES_ARG = [
+    "Gonzalez", "Rodriguez", "Gomez", "Fernandez", "Lopez", "Diaz", "Martinez", 
+    "Perez", "Garcia", "Sanchez", "Romero", "Sosa", "Alvarez", "Torres", "Ruiz", 
+    "Ramirez", "Flores", "Benitez", "Acosta", "Medina", "Herrera", "Suarez", 
+    "Aguirre", "Gimenez", "Gutierrez", "Pereyra", "Rojas", "Molina", "Castro", 
+    "Ortiz", "Silva", "Nuñez", "Luna", "Juarez", "Cabrera", "Rios", "Morales", 
+    "Godoy", "Moreno", "Ferreyra", "Dominguez", "Carrizo", "Salinas", "Peralta", 
+    "Mendez", "Quiroga", "Coronel", "Vazquez", "Villalba", "Iglesias", "Mansilla",
+    "Juan", "Maria", "Jose", "Carlos", "Jorge", "Luis", "Miguel", "Hector", 
+    "Roberto", "Tomas", "Mateo", "Nicolas", "Facundo", "Lucas", "Martin", 
+    "Alejandro", "Guillermo", "Marcelo", "Javier", "Diego", "Gaston", "Pablo", 
+    "Hernan", "Florencia", "Laura", "Carolina", "Natalia", "Daniela", "Romina", 
+    "Julieta", "Lucia", "Sofia", "Camila", "Martina", "Valeria", "Andrea", 
+    "Paula", "Micaela", "Josefina", "Victoria", "Estela", "Walter", "Alberto"
+]
+
+# compilar regex globalmente 
+PATRON_NOMBRES = re.compile(r'\b(?:' + '|'.join(map(re.escape, NOMBRES_ARG)) + r')\b', re.IGNORECASE)
+
 def anonimizar_df(df: pd.DataFrame, salt: str, dias_perturbacion: int) -> pd.DataFrame:
     df_anon = df.copy()
     columnas = df_anon.columns
 
-    # Procesar columnas
+    # procesar columnas
     for col in columnas:
         if col in REGLAS["supresion"]:
             df_anon = df_anon.drop(columns=[col])
@@ -47,13 +67,16 @@ def anonimizar_df(df: pd.DataFrame, salt: str, dias_perturbacion: int) -> pd.Dat
             def enmascarar(texto):
                 if pd.isna(texto) or not isinstance(texto, str): return texto
                 t = texto
-                # Detectar Emails
+                
+                # detectar emails
                 t = re.sub(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', '[EMAIL]', t)
-                # Detectar DNI: Exactamente 7 u 8 cifras limitados por \b
+                # detectar diccionario argentino
+                t = PATRON_NOMBRES.sub('[PERSONA]', t)
+                # detectar dni: exactamente 7 u 8 cifras limitados por \b
                 t = re.sub(r'\b\d{7,8}\b', '[DNI]', t)
-                # Detectar cualquier otro número
+                # detectar cualquier otro numero
                 t = re.sub(r'\d+', '[N]', t)
-                # 3. NER Spacy
+                # ner spacy
                 doc = nlp(t)
                 tokens = ["[PERSONA]" if token.ent_type_ == "PER" else "[LUGAR]" if token.ent_type_ == "LOC" else token.text for token in doc]
                 return spacy.tokens.doc.Doc(nlp.vocab, words=tokens, spaces=[tok.whitespace_ for tok in doc]).text

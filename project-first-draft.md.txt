@@ -1,0 +1,295 @@
+﻿Project Definition: 
+Public Security Report Anonymization & AI Classification System
+1. Introduction
+The "Sistema de Control Disciplinario de las Fuerzas de Seguridad" of Córdoba is a functionally independent body designed to investigate and sanction misconduct within the Police, Anti-narcotics Force (FPA), and Penitentiary Service. Given the sensitive nature of investigating the very forces meant to provide security, data integrity and privacy are paramount.
+This software solution provides an anonymized processing layer for disciplinary files. It allows investigators to analyze patterns of institutional violence or corruption without exposing sensitive personal data of witnesses, victims, or officers until the formal judicial stage. The system then uses AI to classify the Type of Infraction and the Disciplinary Urgency to ensure that cases of high social impact (like Gatillo Fácil) are prioritized.
+This project introduces a scalable, secure, and ethically grounded software solution. It serves a dual purpose:
+1. Irreversible Anonymization: It strips sensitive data from reports using advanced, context-aware artificial intelligence and rule-based engineering while maintaining the grammatical integrity and semantic value of the text.
+2. AI-Driven Triage: Once sanitized, it uses a supervised machine learning classifier to categorize the complaint and assess its urgency.
+Originating in the province of Córdoba, Argentina, the system is designed to understand local security contexts but is architected to scale to other provinces, countries, and languages in the future.
+________________
+
+
+2. Core Goals and Needs
+A. Data Privacy & Compliance
+* The Need: Full adherence to data protection standards.
+* The Goal: PII like names, IDs, emails, and phone numbers must be destroyed or replaced with tags (e.g., [PERSONA], [DNI]). Raw, un-anonymized data must be kept in a highly restricted, secure digital vault accessible only to specific authorized users for chain-of-custody and auditing purposes.
+B. Triage (P1 to P5) and Classification
+* The Need: Dispatchers and judicial officers are overwhelmed by the volume of incoming complaints.
+* The Goal: The system will automatically execute a two-tier classification:
+* Complaint Thopic: Assigning the complaint to specific legal and operational categories (such as Violencia de Género, Robo, Abuso de Autoridad). These will be governed and defined with examples by system administrators.
+* Urgency Priority: Assigning a triage priority from P1 (Critical/Immediate Action) to P5 (Low Priority/Administrative).
+* There should be a “Can’t define” option
+C. Explainability & Human-in-the-Loop (HITL)
+* The Need: Public security cannot rely on "black box" algorithms. Decisions must be transparent and defensible.
+* The Goal: The system will display the AI’s confidence as a percentage breakdown. Furthermore, no automated classification is final; a human operator must validate and approve the AI’s suggested category and urgency level.
+________________
+
+
+3. Role-Based Access Control (RBAC)
+To ensure strict governance, the system defines the following human personas:
+* System Administrator: Manages users, defines categories, and provides the LLM with definitions and examples for classification.
+* Data Operator: Responsible for uploading raw files and executing the bulk anonymization process.
+* Prosecutor: Reviews the categorized incidents, views the P1–P5 urgency, and makes tactical or legal decisions.
+* Researcher: Accesses fully anonymized datasets to pull statistics, map crime trends, and evaluate public security metrics without ever seeing PII.
+3. Statistical and data analysis
+* The Need: Having this kind of data could be useful to understand patterns, do statistics and find solutions
+* The Goal: The system will see relationships between cases and expose them in natural language.
+________________
+
+
+User Stories
+Epic 1: Data Ingestion & PII Anonymization
+User Story 1.1: Bulk Upload of Raw Complaints/Reports
+* ID: US-101
+* User Persona: Data Operator
+* Story: As a Data Operator, I want to securely upload a CSV file containing raw, un-anonymized complaints so that the system can begin the automated sanitization and triage process.
+* Business Value: Enables high-volume processing of complaints without manual copy-pasting, optimizing workflow efficiency.
+* Expected Behavior:
+   * The operator clicks an "Upload" button and selects a local .csv file or drops the file.
+   * The system validates the file structure (checking for required headers like resena, fecha, etc.).
+   * If valid, it uploads the data and places it in a processing queue.
+   * Then the user can download the anonymized file. Also keep it in the system for exploring it and doing the classification or statistical research
+User Story 1.2: Multi-Layered Deterministic & NLP Masking
+* ID: US-102
+* User Persona: System (Automated)
+* Story: As the Anonymization Engine, I must process the ingested text in a specific, prioritized order using both RegEx and NLP so that PII is completely scrubbed while maintaining semantic value.
+* Business Value: Guarantees compliance with the Argentine Personal Data Protection Law by making the data irreversible but keeping the narrative useful for AI classification.
+________________
+
+
+Epic 2: AI Classification & Urgency Triage
+User Story 2.1: Automated Dual Classification (Crime Type and Priority Tagging)
+* ID: US-201
+* User Persona: System / AI Model
+* Story: As the AI Classification Model, I need to analyze the anonymized summary of the incident so that I can accurately suggest both the specific Crime Type (e.g., Robo, Violencia de Género) and a triage priority scale from P1 to P5.
+* Business Value: Accelerates response times for highly critical cases and optimizes specialized resource allocation (e.g., instantly routing Gender Violence cases to dedicated protection units).
+* Expected Behavior:
+   * The model receives the clean text (e.g., "El sujeto amenazó con un arma en [LUGAR] y sustrajo sus pertenencias").
+   * It analyzes contextual semantic weight.
+   * It outputs the most relevant Crime Type (Robo) and Priority (e.g., P2).
+* Acceptance Criteria:
+   * The system must never finalize a classification without an explicit priority score between P1 and P5 AND a designated Crime Type category.
+   * The model must reference the definitions and examples supplied by the System Administrator to formulate its decision.
+User Story 2.2: Confidence and Explainability Presentation
+* ID: US-202
+* User Persona: Detective / Fiscal
+* Story: As a Detective or Fiscal, I want to see the AI's classification along with a breakdown of its confidence percentage so that I can understand how reliable the AI's decision is.
+* Business Value: Eliminates the "black box" problem, fostering institutional trust in AI and preventing blind reliance on algorithmic choices.
+* Expected Behavior:
+   * The UI displays the primary suggested Claim Type and Priority with a percentage (e.g., "Violencia de Género - 91% Confidence | Priority P1 - 85% Confidence").
+   * Secondary classifications with lower confidence are expandable in a dropdown menu.
+   * Any kind of graphics of decision trees or other would be appreciated
+________________
+
+
+Epic 3: Human-in-the-Loop Validation & Governance
+User Story 3.1: Human Override and Final Approval
+* ID: US-301
+* User Persona: Prosecutor
+* Story: As a Prosecutor, I want to review the AI's suggestions and either approve or manually change the Claim Type and urgency level so that no purely automated decision goes unvalidated.
+* Business Value: Provides a hard check against AI hallucinations or biases while keeping humans directly accountable for decision-making.
+* Expected Behavior:
+   * The user sees a split screen: Left side shows the anonymized text, Right side shows AI predictions.
+   * The user can click "Approve" (preserving AI decisions) or use a dropdown to change the Priority or Claim Type (e.g., switching Robo to Abuso de Autoridad if the text dictates it).
+User Story 3.2: Full Action Auditing and Data Vaulting
+* ID: US-302
+* User Persona: System Administrator / Auditor
+* Story: As a System Administrator or Auditor, I want a complete log of who uploaded data, who overrode AI decisions, and secure isolation of raw data so that transparency is 100% auditable.
+* Be able to export those logs in a readable way
+________________
+
+
+Epic 4: Administration & Rule Management
+User Story 4.1: Dynamic Claim Type & Prompt Definition
+* ID: US-401
+* User Persona: System Administrator
+* Story: As a System Administrator, I want a clean interface to create, update, and define Crime Type categories (like Violencia de Género, Robo, Abuso de Autoridad) and provide instructional examples so that I can guide the AI's operational rules.
+* Business Value: Future-proofs the system by allowing administrators to respond to new types of crimes or legal frameworks without altering backend code.
+________________
+
+
+Epic 5: Research & Statistics
+User Story 5.1: Scrubbed Data Export for Analytics
+* ID: US-501
+* User Persona: Researcher
+* Story: As a Researcher, I want to query and export filtered, completely anonymized data based on Claim Types and priorities so that I can generate security reports and map localized crime trends.
+* ________________
+
+
+Technical Architecture & Implementation
+1. Technology Stack
+* Backend: Python 3.12 
+* Frontend: React with Tailwind CSS
+* Core Anonymization Engine: A multi-layered Python pipeline leveraging:
+   * Regular Expressions (RegEx)
+   * SpaCy (es_core_news_lg)
+  
+
+Disable everything except NER
+For the non-transformer models, the ner component is independent, so you can disable everything else:
+nlp = spacy.load("en_core_web_sm", disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"])
+	In the transformer models, ner listens to the transformer component, so you can disable all components related tagging, parsing, and lemmatization.
+nlp = spacy.load("en_core_web_trf", disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
+	   * Microsoft Presidio
+2. Anonymization Pipeline Sequence
+To prevent rules from breaking each other, processing must strictly follow this order:
+1. Emails: 100% extracted via standard syntax RegEx.
+2. Account Numbers: Extracted via strict syntax RegEx.
+3. Phone Numbers: Extracted via RegEx handling syntactic restrictions and regional prefixes.
+4. DNI (Argentine ID): Extracted via isolated 7-to-8 digit boundaries.
+5. Names & Surnames: First filtered via a compiled dictionary of common Argentine names (case-insensitive), followed by SpaCy's NER to catch edge cases.
+6. Addresses: Handled mainly by Microsoft Presidio to safely detect street names and geographic markers.
+7. Locations, Personas and all the rest is handled by spaCy
+8. Tests should be added to the code to make sure no honeypots, false positives or false negatives are present
+3. Architecture Approaches
+* Approach A (Recommended for MVP): API-First Decoupled Architecture The React frontend is served independently. The Python 3.12 backend acts as a high-performance RESTful API .
+   * Why: This allows the heavy AI compute loads to scale independently of the user interface.
+* Approach B: Monolith in a Box Serving both React static builds and Python logic from a single server/container.
+   * Why: Easiest to deploy on-premise inside secure police servers that lack external internet access.
+________________
+
+
+Dual-Classification Integration Architecture
+To handle both classifications simultaneously without doubling our server costs or latency, we have two primary architectural approaches for the model integration.
+Approach A: The Multi-Task Learning (MTL) Pipeline
+Instead of training two separate models, we use a single base model (like a Spanish BERT variant) with two separate output heads branching off the top layer.
+* Head 1: Softmax output for the multi-class (or multi-label) Claim Type.
+* Head 2: Softmax or regression output for the Urgency Priority (P1-P5).
+Approach B: Decoupled Ensemble Pipeline
+We run two completely independent models in parallel inside a worker pool.
+* Model 1: Optimized for classification.
+* Model 2: Trained specifically on sentiment, aggression, and urgency signals.
+________________
+
+
+The Step-by-Step Data & Inference Flow
+Here is exactly how data moves from the user's screen through the anonymizer and into the AI model:
+1. Ingestion & Pre-processing
+* The Data Operator uploads a CSV or the external API pushes a complaint text via the React frontend to the backend (Python 3.12).
+* The payload goes into a message broker/queue (like Redis or RabbitMQ) to prevent blocking the web server during heavy AI inference.
+2. Sanitization
+* The worker pulls the raw complaint from the queue.
+* It runs the multi-layered anonymization sequence we built earlier (Regex ➡️ Dictionary ➡️ SpaCy/Presidio).
+* Crucial Step: The anonymizer outputs a clean string but retains a reference mapping to the raw text in our highly secure, encrypted database vault.
+
+
+3. Model Inference
+The clean, anonymized text is now sent to the Model Inference Service. Here is the mock Python execution flow of how the application interacts with the model:
+
+
+# Conceptual python integration for the classifier
+from typing import Dict, Any
+
+class SecurityClassifier:
+   def __init__(self, model_path: str):
+       # The actual model loading will be done here once developed
+       self.model = self.load_model(model_path)
+       
+   def load_model(self, path: str):
+       # TO DO: Load the actual PyTorch/ONNX/Tensorflow model
+       pass
+
+   def predict(self, anonymized_text: str) -> Dict[str, Any]:
+       """
+       Takes anonymized text and returns a dual-classification payload.
+       """
+       # 1. Tokenize and prepare text for the model
+       
+       # 2. Run model forward pass
+       # raw_output = self.model(anonymized_text)
+       
+       # 3. Extract predictions from the two heads (Mock behavior)
+       crime_type_predictions = {
+           "violencia_de_genero": 0.91,
+           "robo": 0.05,
+           "abuso_autoridad": 0.02,
+           "otros": 0.02
+       }
+       
+       urgency_predictions = {
+           "P1": 0.85,
+           "P2": 0.10,
+           "P3": 0.03,
+           "P4": 0.01,
+           "P5": 0.01
+       }
+       
+       # We take the argmax (highest probability) for the primary suggestion
+       return {
+           "crime_type": {
+               "suggested": max(crime_type_predictions, key=crime_type_predictions.get),
+               "confidence_breakdown": crime_type_predictions
+           },
+           "urgency": {
+               "suggested": max(urgency_predictions, key=urgency_predictions.get),
+               "confidence_breakdown": urgency_predictions
+           }
+       }
+	
+
+4. Database Persistence & WebSocket Push
+* The system saves the predictions into the database as Unverified Drafts.
+* The database structure stores: incident_id, anonymized_text, ai_suggested_crime, ai_suggested_urgency, ai_confidence_payload.
+* A system admin corroborates the anonimization
+* A WebSocket event pushes a notification to the React frontend telling the Prosecutor that a new report is ready for human review.
+5. Human-in-the-Loop (HITL) Feedback Loop
+* When the human validates or overrides the classification, that payload is saved in a "Gold Standard" training table.
+* This table accumulates over time and will be pulled later to fine-tune and retrain the model.
+________________
+
+
+ Database Schema Representation (Postgres)
+To store the explainability percentages and the dual classifications, the database record for a single complaint will look technically like this:
+
+
+{
+ "complaint_id": "uuid-12345",
+ "status": "pending_human_verification",
+ "anonymized_summary": "El sujeto amenazó con un arma a la víctima en [LUGAR]...",
+ "classification": {
+   "crime_type": {
+     "ai_suggested": "Robo",
+     "human_validated": null, 
+     "confidence": 0.94,
+     "all_scores": {
+       "Robo": 0.94,
+       "Violencia de Género": 0.03,
+       "Abuso de Autoridad": 0.01
+     }
+   },
+   "urgency": {
+     "ai_suggested": "P2",
+     "human_validated": null,
+     "confidence": 0.88,
+     "all_scores": {
+       "P1": 0.05,
+       "P2": 0.88,
+       "P3": 0.05,
+       "P4": 0.01,
+       "P5": 0.01
+     }
+   }
+ }
+}
+	
+
+Future Roadmap & "To Do" Modules
+ Supervised Text Classifier Model
+* [TO DO] Define model architecture (Transformer-based, fine-tuned BERT/RoBERTa for Spanish, or classic machine learning ensembles).
+* [TO DO] Dataset labeling protocols (mapping the human override feedback to retrain the model continuously).
+* [TO DO] Explainability UI integration (Translating model attention or SHAP values into readable confidence percentages).
+
+[TO DO] Model Architecture Selection: Decide between a Multi-Task BERT model or decoupled specialized models.
+* [TO DO] Baseline Training: Define standard weights and loss functions to optimize both branches (Crime vs Priority) equally.
+* [TO DO] Export to ONNX: For fast, optimized CPU/GPU inference in the Python 3.12 backend without loading massive training libraries.
+
+
+ Ingestion & Interoperability (API Documentation)
+   * [TO DO] Design a specialized REST API endpoint for the police intake system.
+   * How it should work: The external intake system must hit our endpoint with a JSON payload containing the raw text and a unique source ID. Our system will respond with a webhook once the human operator has validated the P1-P5 triage and category. Full Swagger/OpenAPI documentation needs to be generated for them.
+ Bias & Ethics Mitigation
+   * [TO DO] Develop features to fetch, analyze, and flag biased language within the complaints.
+   * [TO DO] Create a monitoring dashboard to ensure the AI isn't making biased decisions toward specific demographics or locations.
+ Leakage Tolerance
+   * [TO DO] Define the mathematical threshold for acceptable PII leakage before the automatic pipeline triggers a manual review warning.

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_everything-claude-code_sequential-thinking__sequentialthinking",
+      "Bash(python -m venv entorno_api)",
+      "Bash(wc -l backend/**/*.py backend/**/*.yml backend/**/*.yaml backend/**/*.sql)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
